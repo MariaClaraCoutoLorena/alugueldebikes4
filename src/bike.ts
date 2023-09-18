@@ -1,3 +1,4 @@
+
 export class Bike {
     constructor(
         public name: string,
@@ -9,6 +10,7 @@ export class Bike {
         public ratings: number,
         public imageUrls: string[],
         public valorDiario: number,
+        public location?: { latitude: string, longitude: string},
         public disponibilidade?: boolean,
         public dateFrom?: Date,
         public dateTo?: Date,

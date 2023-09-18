@@ -2,10 +2,12 @@ import { Bike } from "./bike";
 import { User } from "./user";
 import crypto from 'crypto'
 import bcrypt from 'bcrypt';
+import { getDistance } from 'geolib';
 export class App {
     users: User[] = []
     bikes: Bike[] = []
     salt: String = bcrypt.genSaltSync(10)
+    location: { latitude: string, longitude: string} = { latitude:'-23.16391658034037', longitude:'-45.79326894135888'}
 
     findUser(email: string): User {
         return this.users.find(user => user.email === email)
@@ -28,8 +30,22 @@ export class App {
         const newId = crypto.randomUUID()
         bike.id = newId
         bike.disponibilidade = true
+        bike.location = {latitude: this.location.latitude, longitude: this.location.longitude}
         this.bikes.push(bike)
         return newId
+    }
+
+    atualizarLocalização(bike: Bike, localization: {latitude: string, longitude:string}) {
+        bike.location = localization
+        let dist = getDistance(localization, this.location)
+        if(dist==0) console.log("A bicicleta está na locadora")
+        else console.log("A localização da bicicleta foi atualizada, ela está a "+dist+" metros da locadora!")
+    }
+
+    verlocalizacao(bike: Bike){
+        let dist = getDistance(bike.location, this.location)
+        if(dist==0) console.log("A bicicleta está na locadora")
+        else console.log("A bicicleta está a "+dist+" metros da locadora!")
     }
 
     verificaUser(email: string, password: string): User{
