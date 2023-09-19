@@ -1,25 +1,31 @@
 import { App } from "./app";
 import { Bike } from "./bike";
+import { Rent } from "./rent";
 import { User } from "./user";
+import sinon from 'sinon'
 
-const app = new App()
-const bike = new Bike('caloi mountain', 'mountain bike', 100, 200, 150.5, 'My bike', 5, [], 10)
-const bikeId = app.registerBike(bike)
-const user = new User('Maria', 'maria@mail.com', '1234')
-app.registerUser(user)
+async function main() {
+    const clock = sinon.useFakeTimers();
+    const app = new App()
+    const user1 = new User('Jose', 'jose@mail.com', '1234')
+    await app.registerUser(user1)
+    const bike = new Bike('caloi mountainbike', 'mountain bike',
+        1234, 1234, 100.0, 'My bike', 5, [])
+    app.registerBike(bike)
+    console.log('Bike disponível: ', bike.available)
+    app.rentBike(bike.id, user1.email)
+    console.log('Bike disponível: ', bike.available)
+    clock.tick(1000 * 60 * 65)
+    console.log(app.returnBike(bike.id, user1.email))
+    console.log('Bike disponível: ', bike.available)
+}
 
-const yesterday = new Date()
-yesterday.setDate(yesterday.getDate() - 1)
-const today = new Date()
-const tomorrow = new Date()
-tomorrow.setDate(tomorrow.getDate() + 1)
+main()
 
-app.rentBike(bikeId, 'maria@mail.com', yesterday, today)
-app.returnBike(bikeId)
-app.verificaUser("maria@mail.com","1234")
 
-app.verlocalizacao(bike)
-app.atualizarLocalização(bike, {latitude:'-23.16', longitude:'-45.7'})
+
+
+
 
 
 

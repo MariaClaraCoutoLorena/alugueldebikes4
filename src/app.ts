@@ -1,63 +1,45 @@
 import { Bike } from "./bike";
+import { Crypt } from "./crypt";
+import { Rent } from "./rent";
 import { User } from "./user";
+import { Location } from "./location";
 import crypto from 'crypto'
-import bcrypt from 'bcrypt';
-import { getDistance } from 'geolib';
+
 export class App {
     users: User[] = []
     bikes: Bike[] = []
-    salt: String = bcrypt.genSaltSync(10)
-    location: { latitude: string, longitude: string} = { latitude:'-23.16391658034037', longitude:'-45.79326894135888'}
+    rents: Rent[] = []
+    crypt: Crypt = new Crypt()
 
     findUser(email: string): User {
         return this.users.find(user => user.email === email)
     }
 
-    registerUser(user: User): string {
+    async registerUser(user: User): Promise<string> {
         for (const rUser of this.users) {
             if (rUser.email === user.email) {
                 throw new Error('Duplicate user.')
             }
         }
-        user.password = bcrypt.hashSync(user.password, this.salt)
         const newId = crypto.randomUUID()
         user.id = newId
+        const encryptedPassword = await this.crypt.encrypt(user.password)
+        user.password = encryptedPassword
         this.users.push(user)
         return newId
+    }
+
+    async authenticate(userEmail: string, password: string): Promise<boolean> {
+        const user = this.findUser(userEmail)
+        if (!user) throw new Error('User not found.')
+        return await this.crypt.compare(password, user.password)
     }
 
     registerBike(bike: Bike): string {
         const newId = crypto.randomUUID()
         bike.id = newId
-        bike.disponibilidade = true
-        bike.location = {latitude: this.location.latitude, longitude: this.location.longitude}
         this.bikes.push(bike)
         return newId
-    }
-
-    atualizarLocalização(bike: Bike, localization: {latitude: string, longitude:string}) {
-        bike.location = localization
-        let dist = getDistance(localization, this.location)
-        if(dist==0) console.log("A bicicleta está na locadora")
-        else console.log("A localização da bicicleta foi atualizada, ela está a "+dist+" metros da locadora!")
-    }
-
-    verlocalizacao(bike: Bike){
-        let dist = getDistance(bike.location, this.location)
-        if(dist==0) console.log("A bicicleta está na locadora")
-        else console.log("A bicicleta está a "+dist+" metros da locadora!")
-    }
-
-    verificaUser(email: string, password: string): User{
-        for(let user of this.users){
-            if(user.email==email){
-                if(user.password=bcrypt.hashSync(password, this.salt)) {
-                    console.log("Usuário logado com sucesso!")
-                    return user
-                }else throw new Error("Senha incorreta!")
-            }
-        }
-        throw new Error("Este email não está cadastrado.")
     }
 
     removeUser(email: string): void {
@@ -69,41 +51,58 @@ export class App {
         throw new Error('User does not exist.')
     }
     
-    rentBike(bikeId: string, userEmail: string, startDate: Date, endDate: Date): void {
+    rentBike(bikeId: string, userEmail: string): void {
         const bike = this.bikes.find(bike => bike.id === bikeId)
         if (!bike) {
             throw new Error('Bike not found.')
+        }
+        if (!bike.available) {
+            throw new Error('Unavailable bike.')
         }
         const user = this.findUser(userEmail)
         if (!user) {
             throw new Error('User not found.')
         }
-        bike.disponibilidade = false;
-        bike.dateFrom = startDate;
-        bike.dateFrom = endDate;
+        bike.available = false
+        const newRent = new Rent(bike, user, new Date())
+        this.rents.push(newRent)
     }
 
-    returnBike(bikeId: string): Number {
-        const today = new Date()
+    returnBike(bikeId: string, userEmail: string): number {
+        const now = new Date()
+        const rent = this.rents.find(rent =>
+            rent.bike.id === bikeId &&
+            rent.user.email === userEmail &&
+            !rent.end
+        )
+        if (!rent) throw new Error('Rent not found.')
+        rent.end = now
+        rent.bike.available = true
+        const hours = diffHours(rent.end, rent.start)
+        return hours * rent.bike.rate
+    }
+
+    listUsers(): User[] {
+        return this.users
+    }
+
+    listBikes(): Bike[] {
+        return this.bikes
+    }
+
+    listRents(): Rent[] {
+        return this.rents
+    }
+
+    moveBikeTo(bikeId: string, location: Location) {
         const bike = this.bikes.find(bike => bike.id === bikeId)
-        if (!bike) {
-            throw new Error('Bike not found.')
-        }
-        bike.disponibilidade = true
-        const diff = Math.abs(today.getTime() - bike.dateFrom.getTime());
-        const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
-        return days*bike.valorDiario;
+        bike.location.latitude = location.latitude
+        bike.location.longitude = location.longitude
     }
-    listBikes() {
-        console.log("Bikes:")
-        for(let bike of this.bikes){
-            console.log("- "+bike.name)
-        }
-    }
-    listUsers() {
-        console.log("Usuários:")
-        for(let user of this.users){
-            console.log("- "+user.name+", "+ user.email)
-        }
-    }
+}
+
+function diffHours(dt2: Date, dt1: Date) {
+  var diff = (dt2.getTime() - dt1.getTime()) / 1000;
+  diff /= (60 * 60);
+  return Math.abs(diff);
 }

@@ -1,3 +1,4 @@
+import { Location } from "./location";
 
 export class Bike {
     constructor(
@@ -9,11 +10,8 @@ export class Bike {
         public description: string,
         public ratings: number,
         public imageUrls: string[],
-        public valorDiario: number,
-        public location?: { latitude: string, longitude: string},
-        public disponibilidade?: boolean,
-        public dateFrom?: Date,
-        public dateTo?: Date,
+        public available: boolean = true,
+        public location: Location = new Location(0.0, 0.0),
         public id?: string
     ) {}
 }
