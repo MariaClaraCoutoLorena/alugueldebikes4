@@ -30,7 +30,13 @@ describe('App', () => {
         expect(bike.location.latitude).toEqual(newYork.latitude)
         expect(bike.location.longitude).toEqual(newYork.longitude)
     })
-
     it('should throw an exception when trying to move an unregistered bike', () => {
-    })
+        const app = new App()
+        const bike = new Bike('caloi mountainbike', 'mountain bike',
+            1234, 1234, 100.0, 'My bike', 5, [])
+        const newYork = new Location(40.753056, -73.983056)
+        expect(() => {
+            app.moveBikeTo(bike.id, newYork);
+        }).toThrow();
+    });
 })
