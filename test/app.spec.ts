@@ -6,6 +6,7 @@ import { Location } from "../src/location"
 import { BikeNotFoundError } from "../src/errors/bike-not-found-error"
 import { UnavailableBikeError } from "../src/errors/unavailable-bike-error"
 import { UserNotFoundError } from "../src/errors/user-not-found-error"
+import { RemoveUserError } from "../src/errors/remove-user-error"
 import { DuplicateUserError } from "../src/errors/duplicate-user-error"
 import { FakeUserRepo } from "./doubles/fake-user-repo"
 import { FakeBikeRepo } from "./doubles/fake-bike-repo"
@@ -127,5 +128,29 @@ describe('App', () => {
         await app.registerUser(user)
         await expect(app.findUser(user.email))
             .resolves.toEqual(user)
+    })
+
+    it ('should remove a user, when he has not open rent', async () => {
+        const app = new App(userRepo, bikeRepo, rentRepo)
+        const user = new User('jose', 'jose@mail.com', '1234')
+        const bike = new Bike('caloi mountainbike', 'mountain bike',
+            1234, 1234, 100.0, 'My bike', 5, [])
+        await app.registerBike(bike)
+        await app.registerUser(user)
+        await app.rentBike(bike.id, user.email)
+        await app.returnBike(bike.id,user.email)
+        await app.removeUser(user.email)
+        expect(app.userRepo['users']).toEqual([]) 
+    })
+
+    it ('should not remove a user, when he has open rent', async () => {
+        const app = new App(userRepo, bikeRepo, rentRepo)
+        const user = new User('jose', 'jose@mail.com', '1234')
+        const bike = new Bike('caloi mountainbike', 'mountain bike',
+            1234, 1234, 100.0, 'My bike', 5, [])
+        await app.registerBike(bike)
+        await app.registerUser(user)
+        await app.rentBike(bike.id, user.email)
+        await expect(app.removeUser(user.email)).rejects.toThrow(RemoveUserError) 
     })
 })

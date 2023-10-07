@@ -14,10 +14,8 @@ async function main() {
     await app.registerUser(user1)
     const bike = new Bike('caloi mountainbike', 'mountain bike',
         1234, 1234, 100.0, 'My bike', 5, [])
-    app.registerBike(bike)
-    console.log('Bike disponível: ', bike.available)
-    app.rentBike(bike.id, user1.email)
-    app.removeUser(user1.email)
+    await app.registerBike(bike)
+    await app.rentBike(bike.id, user1.email)
 }
 
 main()
