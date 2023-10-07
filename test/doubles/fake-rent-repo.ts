@@ -20,6 +20,14 @@ export class FakeRentRepo implements RentRepo {
         )
     }
 
+    async findOpenRentsFor(userEmail: string): Promise<Rent[]> {
+        let rents = Rent[]
+        rents = this.rents.filter(rent => {
+            return rent.user.email === userEmail && !rent.end
+        })
+        return rents;
+    }
+
     async update(id: string, rent: Rent): Promise<void> {
         const rentIndex = this.rents.findIndex(rent => rent.id === id)
         if (rentIndex !== -1) this.rents[rentIndex] = rent
