@@ -5,6 +5,7 @@ import { User } from "./user";
 import sinon from 'sinon'
 
 async function main() {
+    
     const clock = sinon.useFakeTimers();
     const app = new App()
     const user1 = new User('Jose', 'jose@mail.com', '1234')
@@ -14,10 +15,7 @@ async function main() {
     app.registerBike(bike)
     console.log('Bike disponível: ', bike.available)
     app.rentBike(bike.id, user1.email)
-    console.log('Bike disponível: ', bike.available)
-    clock.tick(1000 * 60 * 65)
-    console.log(app.returnBike(bike.id, user1.email))
-    console.log('Bike disponível: ', bike.available)
+    app.removeUser(user1.email)
 }
 
 main()

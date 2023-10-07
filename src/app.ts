@@ -45,10 +45,14 @@ export class App {
     }
 
     async removeUser(email: string): Promise<void> {
+        this.searchRent(email)
         await this.findUser(email)
         await this.userRepo.remove(email)
     }
-    
+    searchRent(email: string){
+       let rents = this.rentRepo
+       console.log(rents)
+    }
     async rentBike(bikeId: string, userEmail: string): Promise<string> {
         const bike = await this.findBike(bikeId)
         if (!bike.available) {
