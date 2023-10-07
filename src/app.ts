@@ -4,6 +4,7 @@ import { Rent } from "./rent";
 import { User } from "./user";
 import { Location } from "./location";
 import { BikeNotFoundError } from "./errors/bike-not-found-error";
+import { RemoveUserError } from "./errors/remove-user-error";
 import { UnavailableBikeError } from "./errors/unavailable-bike-error";
 import { UserNotFoundError } from "./errors/user-not-found-error";
 import { DuplicateUserError } from "./errors/duplicate-user-error";
@@ -45,13 +46,13 @@ export class App {
     }
 
     async removeUser(email: string): Promise<void> {
-        this.searchRent(email)
         await this.findUser(email)
+        let rents_open = await this.searchRent(email)
+        if(rents_open.length>0) throw new RemoveUserError()
         await this.userRepo.remove(email)
     }
-    searchRent(email: string){
-       let rents = this.rentRepo
-       console.log(rents)
+    async searchRent(email: string): Promise<Rent[]>{
+       return await this.rentRepo.findOpenRentsFor(email)
     }
     async rentBike(bikeId: string, userEmail: string): Promise<string> {
         const bike = await this.findBike(bikeId)
