@@ -6,7 +6,6 @@ import { Location } from "./location";
 import { BikeNotFoundError } from "./errors/bike-not-found-error";
 import { UnavailableBikeError } from "./errors/unavailable-bike-error";
 import { UserNotFoundError } from "./errors/user-not-found-error";
-import { RentNotFoundError } from "./errors/rent-not-found-error";
 import { DuplicateUserError } from "./errors/duplicate-user-error";
 import { RentRepo } from "./ports/rent-repo";
 import { UserRepo } from "./ports/user-repo";
@@ -65,7 +64,7 @@ export class App {
     async returnBike(bikeId: string, userEmail: string): Promise<number> {
         const now = new Date()
         const rent = await this.rentRepo.findOpen(bikeId, userEmail)
-        if (!rent) throw new RentNotFoundError()
+        if (!rent) throw new Error('Rent not found.')
         rent.end = now
         await this.rentRepo.update(rent.id, rent)
         rent.bike.available = true

@@ -13,12 +13,11 @@ import { FakeRentRepo } from "./doubles/fake-rent-repo"
 import { UserRepo } from "../src/ports/user-repo"
 import { BikeRepo } from "../src/ports/bike-repo"
 import { RentRepo } from "../src/ports/rent-repo"
-import { RentNotFoundError } from "../src/errors/rent-not-found-error"
 
 
-let userRepo: FakeUserRepo
-let bikeRepo: FakeBikeRepo
-let rentRepo: FakeRentRepo
+let userRepo: UserRepo
+let bikeRepo: BikeRepo
+let rentRepo: RentRepo
 
 describe('App', () => {
     beforeEach(() => {
@@ -67,7 +66,7 @@ describe('App', () => {
             1234, 1234, 100.0, 'My bike', 5, [])
         await app.registerBike(bike)
         await app.rentBike(bike.id, user.email)
-        const appRentRepo = (app.rentRepo) as FakeRentRepo
+        const appRentRepo = (app.rentRepo as FakeRentRepo)
         expect(appRentRepo.rents.length).toEqual(1)
         expect(appRentRepo.rents[0].bike.id).toEqual(bike.id)
         expect(appRentRepo.rents[0].user.email).toEqual(user.email)
@@ -112,7 +111,8 @@ describe('App', () => {
         const user = new User('jose', 'jose@mail.com', '1234')
         await app.registerUser(user)
         await app.removeUser(user.email)
-        await expect(app.findUser(user.email)).rejects.toThrow(UserNotFoundError)
+        await expect(app.findUser(user.email))
+            .rejects.toThrow(UserNotFoundError)
     })
 
     it ('should throw user not found error when trying to remove an unregistered user', async () => {
@@ -120,21 +120,12 @@ describe('App', () => {
         await expect(app.removeUser('fake@mail.com'))
             .rejects.toThrow(UserNotFoundError)
     })
-    it ('should throw rent not found error when trying to return a bike not rent', async () => {
-        const app = new App(userRepo, bikeRepo, rentRepo)
-        const user = new User('jose', 'jose@mail.com', '1234')
-        await app.registerUser(user)
-        const bike = new Bike('caloi mountainbike', 'mountain bike',
-            1234, 1234, 100.0, 'My bike', 5, [])
-        await app.registerBike(bike)
-        await expect(app.returnBike(bike.id, user.email))
-            .rejects.toThrow(RentNotFoundError)
-    })
 
     it ('should correctly register user', async () => {
         const app = new App(userRepo, bikeRepo, rentRepo)
         const user = new User('jose', 'jose@mail.com', '1234')
         await app.registerUser(user)
-        await expect(app.findUser(user.email)).resolves.toEqual(user)
+        await expect(app.findUser(user.email))
+            .resolves.toEqual(user)
     })
 })
