@@ -16,3 +16,16 @@ model User {
   email    String @unique
   password String
 }
+model Bike {
+  id          String @id @default(uuid())
+  name        String
+  type        String
+  bodySize    Number
+  maxLoad     Number
+  rate        Number
+  description String
+  ratings     Number
+  imageUrls   String[]
+  available   Boolean
+  location    Number[]
+}
