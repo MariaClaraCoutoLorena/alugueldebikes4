@@ -4,13 +4,13 @@ import { Rent } from "./rent";
 import { User } from "./user";
 import { Location } from "./location";
 import { BikeNotFoundError } from "./errors/bike-not-found-error";
-import { RemoveUserError } from "./errors/remove-user-error";
 import { UnavailableBikeError } from "./errors/unavailable-bike-error";
 import { UserNotFoundError } from "./errors/user-not-found-error";
 import { DuplicateUserError } from "./errors/duplicate-user-error";
 import { RentRepo } from "./ports/rent-repo";
 import { UserRepo } from "./ports/user-repo";
 import { BikeRepo } from "./ports/bike-repo";
+import { UserHasOpenRentError } from "./errors/user-has-open-rent-error";
 
 export class App {
     crypt: Crypt = new Crypt()
@@ -47,13 +47,12 @@ export class App {
 
     async removeUser(email: string): Promise<void> {
         await this.findUser(email)
-        let rents_open = await this.searchRent(email)
-        if(rents_open.length>0) throw new RemoveUserError()
+        if ((await this.rentRepo.findOpenFor(email)).length > 0) {
+            throw new UserHasOpenRentError()
+        }
         await this.userRepo.remove(email)
     }
-    async searchRent(email: string): Promise<Rent[]>{
-       return await this.rentRepo.findOpenRentsFor(email)
-    }
+    
     async rentBike(bikeId: string, userEmail: string): Promise<string> {
         const bike = await this.findBike(bikeId)
         if (!bike.available) {

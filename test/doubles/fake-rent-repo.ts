@@ -20,11 +20,10 @@ export class FakeRentRepo implements RentRepo {
         )
     }
 
-    async findOpenRentsFor(userEmail: string): Promise<Rent[]> {
-        let rents = this.rents.filter(rent => {
-            return rent.user.email === userEmail && !rent.end
-        })
-        return rents;
+    async findOpenFor(userEmail: string): Promise<Rent[]> {
+        return this.rents.filter(rent =>
+            rent.user.email === userEmail &&
+            !rent.end)
     }
 
     async update(id: string, rent: Rent): Promise<void> {
