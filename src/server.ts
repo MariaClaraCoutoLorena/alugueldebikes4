@@ -1,12 +1,17 @@
 import express from 'express'
-import json from 'express'
-import {Request, Response, NextFunction} from 'express'
-// import Router from 'router'
+import bodyParser from 'body-parser'
+import { Request, Response, NextFunction } from 'express'
+import { App } from './app'
+import { PrismaUserRepo } from './external/database/prisma-user-repo'
+import { PrismaBikeRepo } from './external/database/prisma-bike-repo'
+import { PrismaRentRepo } from './external/database/prisma-rent-repo'
+import { DuplicateUserError } from './errors/duplicate-user-error'
+import { DuplicateBikeError } from './errors/duplicate-bike-error'
 
 const cors = (req: Request, res: Response, next: NextFunction): void => {
-    res.set('acess-control-allow-origin', '*')
-    res.set('acess-control-allow-headers', '*')
-    res.set('acess-control-allow-methods', '*')
+    res.set('access-control-allow-origin', '*')
+    res.set('access-control-allow-headers', '*')
+    res.set('access-control-allow-methods', '*')
     next()
 }
 
@@ -14,21 +19,55 @@ const contentType = (req: Request, res: Response, next: NextFunction): void => {
     res.type('json')
     next()
 }
-const port = 3000
+
 const server = express()
-server.use(json())
+server.use(bodyParser.json())
 server.use(cors)
 server.use(contentType)
-// const router = Router()
-// server.use('/api', router)
 
-server.get('/', (req,res)=>{
-    res.send('hello world!')
+const app = new App(
+    new PrismaUserRepo(),
+    new PrismaBikeRepo(),
+    new PrismaRentRepo()
+)
+
+server.post('/api/users', async (req, res) => {
+    try {
+        const id = await app.registerUser(req.body)
+        res.status(201).json({ id })
+    } catch (e) {
+        if (e instanceof DuplicateUserError) {
+            res.status(400).json({
+                message: 'Could not register user.'
+            })
+            return
+        }
+        res.status(500).json({
+            message: 'Internal server error.'
+        })        
+    }
 })
 
-server.post('/api/users')
-server.listen(port, () =>{
-    console.log('Example port ${port}')
+server.post('/api/bikes', async (req, res) => {
+    try {
+        const id = await app.registerBike(req.body)
+        res.status(201).json({ id })
+    } catch (e) {
+        if (e instanceof DuplicateBikeError) {
+            res.status(400).json({
+                message: 'Could not register bike.'
+            })
+            return
+        }
+        res.status(500).json({
+            message: 'Internal server error.'
+        })        
+    }
+})
+
+const port = 3000
+server.listen(port, () => {
+    console.log(`Server listening on port ${port}`)
 })
 
 export default server
