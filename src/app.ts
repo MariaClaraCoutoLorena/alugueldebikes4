@@ -43,7 +43,7 @@ export class App {
     }
 
     async registerBike(bike: Bike): Promise<string> {
-        if (await this.userRepo.find(bike.id)) {
+        if (await this.bikeRepo.find(bike.id)) {
             throw new DuplicateUserError()
         }
         return await this.bikeRepo.add(bike)
